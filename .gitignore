@@ -1,0 +1,8 @@
+tmp/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+assets/images/c__Users_*

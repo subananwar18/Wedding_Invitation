@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <pattern id="girih" width="80" height="80" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#d4b56a" stroke-width="1.15">
+        <path d="M40 8 L52 28 L72 28 L56 44 L64 64 L40 52 L16 64 L24 44 L8 28 L28 28 Z"/>
+        <circle cx="40" cy="40" r="6.5"/>
+        <path d="M40 0 V8 M40 72 V80 M0 40 H8 M72 40 H80"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="240" height="240" fill="url(#girih)"/>
+</svg>

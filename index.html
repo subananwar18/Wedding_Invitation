@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#FAFAFA" />
+    <meta
+      name="description"
+      content="You are invited to the Nikah of Ayaan and Meher."
+    />
+    <title>Ayaan &amp; Meher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&family=Noto+Nastaliq+Urdu:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="is-sealed">
+    <div class="paper-grain" aria-hidden="true"></div>
+
+    <section class="cover" id="cover" aria-label="Invitation envelope">
+      <svg class="cover-defs" width="0" height="0" aria-hidden="true">
+        <defs>
+          <clipPath id="flapN" clipPathUnits="objectBoundingBox">
+            <path d="M0 0 H1 V0.6 C0.88 0.56 0.82 0.8 0.7 0.74 C0.6 0.68 0.55 0.9 0.5 0.98 C0.45 0.9 0.4 0.68 0.3 0.74 C0.18 0.8 0.12 0.56 0 0.6 Z" />
+          </clipPath>
+          <clipPath id="flapS" clipPathUnits="objectBoundingBox">
+            <path d="M0 1 H1 V0.4 C0.88 0.44 0.82 0.2 0.7 0.26 C0.6 0.32 0.55 0.1 0.5 0.02 C0.45 0.1 0.4 0.32 0.3 0.26 C0.18 0.2 0.12 0.44 0 0.4 Z" />
+          </clipPath>
+          <clipPath id="flapW" clipPathUnits="objectBoundingBox">
+            <path d="M0 0 V1 H0.6 C0.56 0.88 0.8 0.82 0.74 0.7 C0.68 0.6 0.9 0.55 0.98 0.5 C0.9 0.45 0.68 0.4 0.74 0.3 C0.8 0.18 0.56 0.12 0.6 0 Z" />
+          </clipPath>
+          <clipPath id="flapE" clipPathUnits="objectBoundingBox">
+            <path d="M1 0 V1 H0.4 C0.44 0.88 0.2 0.82 0.26 0.7 C0.32 0.6 0.1 0.55 0.02 0.5 C0.1 0.45 0.32 0.4 0.26 0.3 C0.2 0.18 0.44 0.12 0.4 0 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+      <div class="cover-liner" aria-hidden="true"></div>
+      <div class="flap flap-n" aria-hidden="true"><span class="flap-skin"></span></div>
+      <div class="flap flap-e" aria-hidden="true"><span class="flap-skin"></span></div>
+      <div class="flap flap-s" aria-hidden="true"><span class="flap-skin"></span></div>
+      <div class="flap flap-w" aria-hidden="true"><span class="flap-skin"></span></div>
+      <div class="seal-cluster">
+        <button class="wax-seal" id="openBtn" type="button" aria-label="Open invitation">
+          <img src="assets/images/wax-seal.png" alt="" />
+          <span class="sr-only">A &amp; M</span>
+          <span hidden id="sealGroom">A</span>
+          <span hidden id="sealBride">M</span>
+        </button>
+        <p class="open-hint" data-i18n="tapToOpen">TAP TO OPEN</p>
+      </div>
+    </section>
+
+    <div class="app" id="app">
+      <button class="float-ctrl music-btn" id="musicBtn" type="button" aria-label="Toggle music">
+        <span class="music-on">♪</span>
+        <span class="music-off">×</span>
+      </button>
+      <button class="float-ctrl lang-btn" id="langBtn" type="button">
+        <span data-i18n="langBtn">Urdu</span>
+      </button>
+
+      <main class="invitation" id="invitation" hidden>
+        <section class="opening-hero section fade-section" id="opening">
+          <p class="bismillah fade-item">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+          <p class="bismillah-en fade-item" data-i18n="bismillahEn">
+            In the name of Allah, the Most Gracious, the Most Merciful.
+          </p>
+          <div class="couple-frame fade-art">
+            <img
+              class="watercolor"
+              src="assets/images/couple-watercolor.png"
+              alt="Watercolor illustration of Ayaan and Meher"
+            />
+          </div>
+          <p class="together-names fade-item">
+            Ayaan <span class="amp">&amp;</span> Meher
+          </p>
+        </section>
+
+        <section class="intro-pair section fade-section" id="groom">
+          <div class="editorial">
+            <div class="portrait-frame fade-art">
+              <img
+                class="watercolor"
+                src="assets/images/groom-watercolor.png"
+                alt="Watercolor illustration of the groom"
+              />
+            </div>
+            <div class="person-copy">
+              <p class="caps-line fade-item" data-i18n="theGroom">The Groom</p>
+              <h2 class="script-name fade-item" id="groomName">Ayaan</h2>
+              <span class="divider fade-item" aria-hidden="true"></span>
+              <p class="person-meta fade-item" id="groomMeta"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="intro-pair intro-pair--reverse section fade-section" id="bride">
+          <div class="editorial">
+            <div class="portrait-frame fade-art">
+              <img
+                class="watercolor"
+                src="assets/images/bride-watercolor.png"
+                alt="Watercolor illustration of the bride"
+              />
+            </div>
+            <div class="person-copy">
+              <p class="caps-line fade-item" data-i18n="theBride">The Bride</p>
+              <h2 class="script-name fade-item" id="brideName">Meher</h2>
+              <span class="divider fade-item" aria-hidden="true"></span>
+              <p class="person-meta fade-item" id="brideMeta"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="quote-section section fade-section" id="verse">
+          <div class="geo-wash" aria-hidden="true"></div>
+          <span class="ornament fade-item" aria-hidden="true">✦</span>
+          <p class="arabic fade-item" id="verseArabic"></p>
+          <blockquote class="quote-text fade-item" data-i18n="quote"></blockquote>
+          <p class="quote-ref fade-item" id="verseRef"></p>
+        </section>
+
+        <section class="date-section section fade-section" id="dateReveal">
+          <p class="caps-line fade-item" data-i18n="ourDate">Our Date</p>
+          <p class="hint fade-item" data-i18n="dateHint">A blessing sealed within the heart</p>
+          <div
+            class="heart-stage fade-item"
+            id="heartStage"
+            role="img"
+            aria-label="Scratch the heart to reveal the wedding date"
+          >
+            <svg class="heart-defs" width="0" height="0" aria-hidden="true">
+              <defs>
+                <clipPath id="heartClip" clipPathUnits="objectBoundingBox">
+                  <path
+                    d="M0.5 0.893 C0.5 0.893 0.093 0.6 0.093 0.343 C0.093 0.171 0.247 0.093 0.373 0.193 C0.44 0.25 0.5 0.343 0.5 0.343 C0.5 0.343 0.56 0.25 0.627 0.193 C0.753 0.093 0.907 0.171 0.907 0.343 C0.907 0.6 0.5 0.893 0.5 0.893 Z"
+                  />
+                </clipPath>
+              </defs>
+            </svg>
+            <svg class="heart-outline" viewBox="0 0 300 280" aria-hidden="true">
+              <path
+                d="M150 250 C150 250 28 168 28 96 C28 48 74 26 112 54 C132 70 150 96 150 96 C150 96 168 70 188 54 C226 26 272 48 272 96 C272 168 150 250 150 250 Z"
+              />
+            </svg>
+            <div class="heart-core">
+              <div class="heart-date" id="heartSecret">
+                <span class="caps-line" data-i18n="invitedShort">Nikah</span>
+                <span class="date-serif" id="revealDate"></span>
+                <span class="date-meta" id="revealMeta"></span>
+              </div>
+              <canvas id="scratchCanvas" width="300" height="280"></canvas>
+              <p class="scratch-label" id="scratchLabel" data-i18n="scratch">Scratch to Reveal</p>
+            </div>
+          </div>
+          <div class="heart-petals" id="heartPetals" aria-hidden="true"></div>
+        </section>
+
+        <div id="afterReveal" hidden>
+          <section class="celebration section fade-section" id="celebration">
+            <img class="wash-img watercolor fade-art" src="assets/images/floral-spray.png" alt="" />
+            <p class="script-accent fade-item" data-i18n="celebration">The Celebration</p>
+            <p class="caps-line fade-item" data-i18n="timeline">Wedding Journey</p>
+          </section>
+
+          <nav class="event-nav" id="eventNav" aria-label="Wedding events"></nav>
+
+          <section class="events" id="events"></section>
+
+          <section class="venue-section section fade-section" id="venue">
+            <p class="caps-line fade-item" data-i18n="venue">The Venue</p>
+            <div class="venue-art fade-art">
+              <img
+                class="watercolor"
+                src="assets/images/venue-watercolor.png"
+                alt="Watercolor illustration of The Oberoi Udaivilas"
+              />
+            </div>
+            <h2 class="serif-title fade-item" id="venueName"></h2>
+            <p class="address fade-item" id="venueAddress"></p>
+            <a
+              class="map-cta fade-item"
+              id="mapsLink"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="viewMaps"
+              >View Location</a
+            >
+          </section>
+
+          <section class="countdown-section section fade-section" id="countdown">
+            <p class="caps-line fade-item" data-i18n="countdownTitle">Until We Gather</p>
+            <div class="count-row fade-item" id="countRow">
+              <div class="count-cell">
+                <span class="count-num" id="cDays">00</span>
+                <span class="count-label" data-i18n="days">DAYS</span>
+              </div>
+              <div class="count-cell">
+                <span class="count-num" id="cMinutes">00</span>
+                <span class="count-label" data-i18n="minutes">MINUTES</span>
+              </div>
+              <div class="count-cell">
+                <span class="count-num" id="cSeconds">00</span>
+                <span class="count-label" data-i18n="seconds">SECONDS</span>
+              </div>
+            </div>
+            <p class="today-msg" id="todayMsg" hidden>
+              <span data-i18n="today">Today is the Day</span>
+              <small data-i18n="todayNote">With barakah, we begin forever.</small>
+            </p>
+          </section>
+
+          <section class="quote-section quote-section--closing section fade-section" id="closing">
+            <span class="ornament fade-item" aria-hidden="true">✦</span>
+            <p class="arabic fade-item" data-i18n="closingArabic"></p>
+            <blockquote class="quote-text fade-item" data-i18n="closing"></blockquote>
+          </section>
+
+          <section class="finale section fade-section" id="finale">
+            <p class="script-accent fade-item" data-i18n="youAreInvited">You Are Invited</p>
+            <h2 class="finale-names fade-item">Ayaan <span>&amp;</span> Meher</h2>
+            <p class="date-serif fade-item" id="finaleDate"></p>
+            <a
+              class="map-cta fade-item"
+              id="finaleMaps"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="viewMaps"
+              >View Location</a
+            >
+            <p class="footer-note fade-item" data-i18n="footerNote">
+              With barakah from both families
+            </p>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
