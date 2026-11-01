@@ -237,10 +237,16 @@ html[lang="hi"] .reception-address,
 html[lang="hi"] .reception-when,
 html[lang="hi"] .closing-sign,
 html[lang="hi"] .hero-sub,
-html[lang="hi"] .open-hint-hi {
+html[lang="hi"] .quran-meaning,
+html[lang="hi"] .quran-ref {
   font-family: "Noto Sans Devanagari", var(--serif);
   font-style: normal;
   line-height: 1.7;
+}
+
+html[lang="hi"] .quran-ref {
+  letter-spacing: 0.06em;
+  text-transform: none;
 }
 
 html[lang="hi"] .couple-names,
@@ -258,6 +264,21 @@ body.is-sealed {
 body.is-sealed .top-bar {
   opacity: 0;
   pointer-events: none;
+}
+
+.music-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: var(--sage);
+}
+
+.music-btn .music-icon {
+  display: inline-flex;
+  line-height: 0;
 }
 
 .music-btn.is-on .music-off,
@@ -299,10 +320,17 @@ html[lang="ur"] .family-address,
 html[lang="ur"] .family-phone,
 html[lang="ur"] .reception-address,
 html[lang="ur"] .reception-when,
-html[lang="ur"] .closing-sign {
+html[lang="ur"] .closing-sign,
+html[lang="ur"] .quran-meaning,
+html[lang="ur"] .quran-ref {
   font-family: "Noto Nastaliq Urdu", var(--serif);
   font-style: normal;
   line-height: 2;
+}
+
+html[lang="ur"] .quran-ref {
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 .invitation.is-lang-switching {
@@ -660,7 +688,6 @@ html[lang="ur"] .closing-sign {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
   white-space: nowrap;
   color: var(--muted);
 }
@@ -672,15 +699,6 @@ html[lang="ur"] .closing-sign {
   font-weight: 500;
   color: var(--ink);
   animation: hintPulse 2.8s var(--ease) infinite;
-}
-
-.open-hint-hi {
-  font-family: "Poppins", "Noto Sans Devanagari", "Noto Nastaliq Urdu", sans-serif;
-  font-size: clamp(0.78rem, 3.2vw, 0.95rem);
-  letter-spacing: 0.04em;
-  font-weight: 400;
-  color: var(--sage);
-  animation: hintPulse 2.8s var(--ease) infinite 0.2s;
 }
 
 @keyframes hintPulse {
@@ -1334,6 +1352,10 @@ html[lang="ur"] .closing-sign {
 }
 
 /* Family */
+.family {
+  padding-bottom: 0;
+}
+
 .family-hosts {
   margin: 0.7rem 0 0;
   font-family: var(--serif);
@@ -1366,6 +1388,7 @@ html[lang="ur"] .closing-sign {
 
 /* Closing */
 .closing {
+  padding-top: 0;
   padding-bottom: max(5rem, env(safe-area-inset-bottom) + 3rem);
 }
 
@@ -1403,6 +1426,42 @@ html[lang="ur"] .closing-sign {
   margin: 0.55rem 0 0;
   font-size: 0.7rem;
   letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.quran-verse {
+  margin: 2.75rem auto;
+  max-width: 20rem;
+  padding: 0 1rem;
+  border: 0;
+  text-align: center;
+}
+
+.quran-arabic {
+  margin: 0;
+  font-family: var(--arabic);
+  font-size: clamp(1.35rem, 5.4vw, 1.75rem);
+  line-height: 1.85;
+  color: var(--ink);
+  direction: rtl;
+}
+
+.quran-meaning {
+  margin: 0.85rem 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.quran-ref {
+  display: block;
+  margin: 0.7rem 0 0;
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
 }
@@ -1511,7 +1570,6 @@ html[lang="ur"] .closing-sign {
   .heart-stage.is-open .heart-date,
   .wax-seal,
   .open-hint-en,
-  .open-hint-hi,
   .float-art,
   .shimmer-veil,
   .fade-section.is-visible .ornament-line,
@@ -1545,9 +1603,5 @@ html[lang="ur"] .closing-sign {
 
   .open-hint-en {
     font-size: 0.72rem;
-  }
-
-  .open-hint-hi {
-    font-size: 0.7rem;
   }
 }

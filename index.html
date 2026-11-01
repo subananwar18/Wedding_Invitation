@@ -62,16 +62,35 @@
         </button>
         <p class="open-hint">
           <span class="open-hint-en" data-i18n="tapToOpen">TAP TO OPEN</span>
-          <span class="open-hint-hi" data-i18n="tapToOpenAlt">खोलने के लिए टैप करें</span>
         </p>
       </div>
     </section>
 
     <div class="app" id="app">
+      <audio
+        id="bgMusic"
+        src="assets/audio/background.mp4"
+        preload="auto"
+        loop
+        playsinline
+        hidden
+      ></audio>
       <div class="top-bar" id="topBar" dir="ltr">
         <button class="float-ctrl music-btn" id="musicBtn" type="button" aria-label="Toggle music" aria-pressed="false">
-          <span class="music-on">♪</span>
-          <span class="music-off">×</span>
+          <span class="music-icon music-on" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10v4h3l4 4V6L6 10H3z"></path>
+              <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+              <path d="M18 6a8.5 8.5 0 0 1 0 12"></path>
+            </svg>
+          </span>
+          <span class="music-icon music-off" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10v4h3l4 4V6L6 10H3z"></path>
+              <path d="M16 9l5 5"></path>
+              <path d="M21 9l-5 5"></path>
+            </svg>
+          </span>
         </button>
         <div class="lang-switch" role="group" aria-label="Language" dir="ltr">
           <button class="lang-opt is-active" id="langEn" type="button" data-lang="en" aria-pressed="true">ENG</button>
@@ -228,7 +247,7 @@
           <a
             class="btn-cta fade-item"
             id="mapsLink"
-            href="https://www.google.com/maps/search/?api=1&query=Moh.+Suleman+Nagar%2C+Bhadauni%2C+Nawada%2C+Bihar+805110"
+            href="https://maps.app.goo.gl/c6HnsoyAx151c39e7?g_st=aw"
             target="_blank"
             rel="noopener noreferrer"
             data-i18n="getDirections"
@@ -253,6 +272,12 @@
 
         <!-- SECTION 8 – Closing -->
         <section class="closing section fade-section" id="finale">
+          <blockquote class="quran-verse fade-item">
+            <p class="quran-arabic" lang="ar" dir="rtl">وَخَلَقْنَاكُمْ أَزْوَاجًا</p>
+            <p class="quran-meaning" data-i18n="quranMeaning">And We created you in pairs.</p>
+            <cite class="quran-ref" data-i18n="quranRef">Qur’an · An-Naba 78:8</cite>
+          </blockquote>
+
           <div class="closing-art fade-art float-art">
             <img
               class="watercolor"

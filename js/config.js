@@ -26,8 +26,7 @@ window.WEDDING = {
     time: "7:00 PM",
     place: "At Our Residence",
     address: "Moh. Suleman Nagar, Bhadauni,\nDist. Nawada, Bihar – 805110",
-    mapsUrl:
-      "https://www.google.com/maps/search/?api=1&query=Moh.+Suleman+Nagar%2C+Bhadauni%2C+Nawada%2C+Bihar+805110"
+    mapsUrl: "https://maps.app.goo.gl/c6HnsoyAx151c39e7?g_st=aw"
   },
   family: {
     hosts: "Mrs. & Mr. Md. Azhar Ali",
@@ -147,6 +146,8 @@ window.WEDDING = {
       closingMsg: "Your Presence Will Make Our Celebration More Special.",
       withLoveSign: "With Love,",
       closingNames: "Afzal & Shahin",
+      quranMeaning: "And We created you in pairs.",
+      quranRef: "Qur’an · An-Naba 78:8",
       openAria: "Open invitation for Afzal and Shahin",
       scratchAria: "Scratch the heart to reveal the Nikah date",
       musicAria: "Toggle music",
@@ -201,6 +202,8 @@ window.WEDDING = {
       closingMsg: "आपकी उपस्थिति हमारे उत्सव को और खास बना देगी।",
       withLoveSign: "प्यार के साथ,",
       closingNames: "अफजल एवं शाहीन",
+      quranMeaning: "और हमने तुम्हें जोड़ों में पैदा किया।",
+      quranRef: "क़ुरआन · अन-नबा ७८:८",
       openAria: "अफजल और शाहीन का निमंत्रण खोलें",
       scratchAria: "निकाह की तारीख देखने के लिए दिल पर स्क्रैच करें",
       musicAria: "संगीत चालू या बंद करें",
@@ -255,6 +258,8 @@ window.WEDDING = {
       closingMsg: "آپ کی موجودگی ہماری خوشی کو دوبالا کر دے گی۔",
       withLoveSign: "پیار کے ساتھ،",
       closingNames: "افضل و شاہین",
+      quranMeaning: "اور ہم نے تمہیں جوڑوں میں پیدا کیا۔",
+      quranRef: "قرآن · النبأ ۷۸:۸",
       openAria: "افضل اور شاہین کی دعوت کھولیں",
       scratchAria: "نکاح کی تاریخ ظاہر کرنے کے لیے دل پر اسکریچ کریں",
       musicAria: "موسیقی چالو یا بند کریں",

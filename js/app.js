@@ -15,6 +15,7 @@
     revealFallback: document.getElementById("revealFallback"),
     events: document.getElementById("events"),
     musicBtn: document.getElementById("musicBtn"),
+    bgMusic: document.getElementById("bgMusic"),
     petalField: document.getElementById("petalField"),
     mapsLink: document.getElementById("mapsLink"),
     langEn: document.getElementById("langEn"),
@@ -27,9 +28,12 @@
   let opening = false;
   let dateOpened = false;
   let scratchReady = false;
-  let audioCtx = null;
-  let padNodes = null;
   let musicOn = false;
+
+  if (els.bgMusic) {
+    els.bgMusic.volume = 0.55;
+    els.bgMusic.loop = true;
+  }
 
   function t(key) {
     const dict = W.i18n[lang] || W.i18n.en;
@@ -375,6 +379,7 @@
       initScratch();
       startAmbientPetals();
       if (!prefersReduced) spawnPetals(els.petalField, 14);
+      setMusicPlaying(true);
     });
 
     const reveal = () => {
@@ -392,47 +397,31 @@
     window.setTimeout(reveal, 180);
   }
 
-  function startPad() {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    audioCtx = audioCtx || new AudioContext();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    if (padNodes) return;
-    const master = audioCtx.createGain();
-    master.gain.value = 0.04;
-    master.connect(audioCtx.destination);
-    const freqs = [196, 246.94, 293.66];
-    padNodes = freqs.map((freq, i) => {
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      osc.type = i === 0 ? "sine" : "triangle";
-      osc.frequency.value = freq;
-      g.gain.value = 0.22 - i * 0.05;
-      osc.connect(g);
-      g.connect(master);
-      osc.start();
-      return osc;
-    });
-  }
-
-  function stopPad() {
-    if (!padNodes) return;
-    padNodes.forEach((osc) => {
-      try {
-        osc.stop();
-      } catch (e) {
-        /* already stopped */
+  function setMusicPlaying(on) {
+    musicOn = !!on;
+    if (els.musicBtn) {
+      els.musicBtn.classList.toggle("is-on", musicOn);
+      els.musicBtn.setAttribute("aria-pressed", String(musicOn));
+    }
+    if (!els.bgMusic) return;
+    if (musicOn) {
+      const play = els.bgMusic.play();
+      if (play && typeof play.catch === "function") {
+        play.catch(() => {
+          musicOn = false;
+          if (els.musicBtn) {
+            els.musicBtn.classList.remove("is-on");
+            els.musicBtn.setAttribute("aria-pressed", "false");
+          }
+        });
       }
-    });
-    padNodes = null;
+    } else {
+      els.bgMusic.pause();
+    }
   }
 
   function toggleMusic() {
-    musicOn = !musicOn;
-    els.musicBtn.classList.toggle("is-on", musicOn);
-    els.musicBtn.setAttribute("aria-pressed", String(musicOn));
-    if (musicOn) startPad();
-    else stopPad();
+    setMusicPlaying(!musicOn);
   }
 
   els.openBtn.addEventListener("click", openInvitation);
