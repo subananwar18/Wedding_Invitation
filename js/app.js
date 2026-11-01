@@ -9,33 +9,31 @@
     cover: document.getElementById("cover"),
     openBtn: document.getElementById("openBtn"),
     invitation: document.getElementById("invitation"),
-    afterReveal: document.getElementById("afterReveal"),
     heartStage: document.getElementById("heartStage"),
-    heartSecret: document.getElementById("heartSecret"),
     heartPetals: document.getElementById("heartPetals"),
     scratchCanvas: document.getElementById("scratchCanvas"),
+    revealFallback: document.getElementById("revealFallback"),
     events: document.getElementById("events"),
-    eventNav: document.getElementById("eventNav"),
-    langBtn: document.getElementById("langBtn"),
     musicBtn: document.getElementById("musicBtn"),
-    todayMsg: document.getElementById("todayMsg"),
-    countRow: document.getElementById("countRow")
+    petalField: document.getElementById("petalField"),
+    mapsLink: document.getElementById("mapsLink"),
+    langEn: document.getElementById("langEn"),
+    langHi: document.getElementById("langHi"),
+    langUr: document.getElementById("langUr")
   };
 
-  let lang = "en";
+  const savedLang = localStorage.getItem("wedding-lang");
+  let lang = savedLang === "ur" || savedLang === "hi" ? savedLang : "en";
   let opening = false;
   let dateOpened = false;
   let scratchReady = false;
   let audioCtx = null;
   let padNodes = null;
   let musicOn = false;
-  let countdownTimer = null;
 
-  function mapsUrl() {
-    return (
-      "https://www.google.com/maps/search/?api=1&query=" +
-      encodeURIComponent(W.venue.query)
-    );
+  function t(key) {
+    const dict = W.i18n[lang] || W.i18n.en;
+    return dict[key] != null ? dict[key] : W.i18n.en[key] || key;
   }
 
   function applyI18n() {
@@ -44,99 +42,100 @@
       const key = node.getAttribute("data-i18n");
       if (dict[key] != null) node.textContent = dict[key];
     });
-    document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
-      const key = node.getAttribute("data-i18n-placeholder");
-      if (dict[key] != null) node.setAttribute("placeholder", dict[key]);
+    document.querySelectorAll("[data-i18n-html]").forEach((node) => {
+      const key = node.getAttribute("data-i18n-html");
+      if (dict[key] != null) node.innerHTML = dict[key].replace(/\n/g, "<br />");
     });
-    els.html.lang = lang === "ur" ? "ur" : "en";
-    els.html.dir = lang === "ur" ? "rtl" : "ltr";
+
+    els.html.lang = lang === "ur" ? "ur" : lang === "hi" ? "hi" : "en";
+    // Keep page chrome LTR so ENG | हिन्दी | URDU never reverse.
+    els.html.dir = "ltr";
+    const contentDir = lang === "ur" ? "rtl" : "ltr";
+    if (els.invitation) els.invitation.dir = contentDir;
+    if (els.cover) els.cover.dir = contentDir;
+    if (els.langEn) {
+      els.langEn.classList.toggle("is-active", lang === "en");
+      els.langEn.setAttribute("aria-pressed", String(lang === "en"));
+    }
+    if (els.langHi) {
+      els.langHi.classList.toggle("is-active", lang === "hi");
+      els.langHi.setAttribute("aria-pressed", String(lang === "hi"));
+    }
+    if (els.langUr) {
+      els.langUr.classList.toggle("is-active", lang === "ur");
+      els.langUr.setAttribute("aria-pressed", String(lang === "ur"));
+    }
+
+    els.openBtn.setAttribute("aria-label", t("openAria"));
+    els.musicBtn.setAttribute("aria-label", t("musicAria"));
+    if (els.heartStage) els.heartStage.setAttribute("aria-label", t("scratchAria"));
+    if (els.events) els.events.setAttribute("aria-label", t("programmeAria"));
+
+    renderEvents();
   }
 
-  function fillStatic() {
-    const g = W.couple;
-    document.getElementById("groomName").textContent = g.groomsName;
-    document.getElementById("brideName").textContent = g.bridesName;
-    document.getElementById("groomMeta").innerHTML =
-      g.groomsParents + "<br>" + g.groomsEducation + " · " + g.groomsProfession;
-    document.getElementById("brideMeta").innerHTML =
-      g.bridesParents + "<br>" + g.bridesEducation + " · " + g.bridesProfession;
-    document.getElementById("verseArabic").textContent = W.verse.arabic;
-    document.getElementById("verseRef").textContent = "— " + W.verse.reference;
-    document.getElementById("venueName").textContent = W.venue.name;
-    document.getElementById("venueAddress").textContent = W.venue.address;
-    document.getElementById("revealDate").textContent = W.datetime.displayDate;
-    document.getElementById("revealMeta").textContent =
-      W.datetime.displayDay + " · " + W.datetime.displayTime;
-    document.getElementById("finaleDate").textContent =
-      W.datetime.displayDate + " · " + W.datetime.displayTime;
-    document.getElementById("mapsLink").href = mapsUrl();
-    document.getElementById("finaleMaps").href = mapsUrl();
-    document.getElementById("sealGroom").textContent = g.groomsName.charAt(0);
-    document.getElementById("sealBride").textContent = g.bridesName.charAt(0);
-    els.openBtn.setAttribute(
-      "aria-label",
-      "Open invitation for " + g.groomsName + " and " + g.bridesName
-    );
-    renderEvents();
-    applyI18n();
-    preloadArt();
+  function setLang(next) {
+    if (next === lang) return;
+    lang = next;
+    localStorage.setItem("wedding-lang", lang);
+    if (els.invitation && !els.invitation.hidden) {
+      els.invitation.classList.add("is-lang-switching");
+      window.setTimeout(() => {
+        applyI18n();
+        els.invitation.classList.remove("is-lang-switching");
+      }, prefersReduced ? 0 : 180);
+    } else {
+      applyI18n();
+    }
   }
 
   function preloadArt() {
-    const imgs = document.querySelectorAll(
-      "#invitation img, .watercolor, .event-illust, .wash-img"
-    );
-    imgs.forEach((img) => {
+    document.querySelectorAll("#invitation img").forEach((img) => {
       if (!img.src) return;
       const warm = new Image();
       warm.src = img.src;
-      if (img.decode) {
-        img.decode().catch(() => {});
-      }
+      if (img.decode) img.decode().catch(() => {});
     });
   }
 
   function renderEvents() {
+    if (!els.events) return;
+    const alreadyOpen = !els.invitation.hidden;
     els.events.innerHTML = "";
-    els.eventNav.innerHTML = "";
-    W.events.forEach((event, i) => {
-      const num = String(i + 1).padStart(2, "0");
-      const panel = document.createElement("article");
-      panel.className = "event-panel fade-section";
-      panel.id = "event-" + event.id;
-      panel.innerHTML =
-        '<span class="ornament fade-item" aria-hidden="true">✦</span>' +
-        '<img class="event-illust watercolor fade-art" src="' +
+    W.events.forEach((event) => {
+      const card = document.createElement("article");
+      card.className = "event-card fade-section" + (alreadyOpen ? " is-visible" : "");
+      card.id = "event-" + event.id;
+      const day = t(event.dayKey);
+      const date =
+        lang === "ur" ? event.dateUr : lang === "hi" ? event.dateHi : event.date;
+      const time =
+        lang === "ur" ? event.timeUr : lang === "hi" ? event.timeHi : event.time;
+      card.innerHTML =
+        '<div class="event-art fade-art float-art">' +
+        '<img class="watercolor" src="' +
         event.image +
         '" alt="" />' +
+        "</div>" +
         '<h3 class="event-title fade-item">' +
-        event.title +
+        t(event.titleKey) +
         "</h3>" +
-        '<p class="event-date fade-item">' +
-        event.date +
+        '<p class="event-meta fade-item">' +
+        day +
+        ", " +
+        date +
         "</p>" +
         '<p class="event-time fade-item">' +
-        event.time +
-        "</p>" +
-        '<p class="event-note fade-item">' +
-        event.note +
-        "</p>" +
-        '<p class="event-venue fade-item">' +
-        W.venue.name +
+        time +
         "</p>";
-      els.events.appendChild(panel);
-
-      const link = document.createElement("a");
-      link.href = "#event-" + event.id;
-      link.textContent = num;
-      link.dataset.target = "event-" + event.id;
-      els.eventNav.appendChild(link);
+      els.events.appendChild(card);
     });
+    if (alreadyOpen) revealSections(els.events);
   }
 
   function spawnPetals(host, count) {
     if (!host || prefersReduced) return;
-    const colors = ["#f7f1e6", "#a5b19a", "#b7a06a", "#d8c4bc", "#e7efe0"];
+    const colors = ["#dce5d8", "#899486", "#a8b4a2", "#c9a49a", "#b69a70"];
     for (let i = 0; i < count; i += 1) {
       const p = document.createElement("span");
       p.className = "petal";
@@ -152,6 +151,16 @@
     }
   }
 
+  function startAmbientPetals() {
+    if (prefersReduced || !els.petalField) return;
+    const drip = () => {
+      if (document.hidden) return;
+      spawnPetals(els.petalField, 1);
+    };
+    drip();
+    window.setInterval(drip, 5600);
+  }
+
   function revealSections(root) {
     const nodes = [...(root || document).querySelectorAll(".fade-section")].filter(
       (node) => !node.closest("[hidden]")
@@ -163,103 +172,19 @@
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            io.unobserve(entry.target);
-          }
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          io.unobserve(entry.target);
         });
       },
-      { threshold: 0.14, rootMargin: "0px 0px -12% 0px" }
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
     );
     nodes.forEach((n) => io.observe(n));
   }
 
-  function scrollToCelebration() {
-    const target = document.getElementById("celebration");
-    if (!target) return;
-    target.scrollIntoView({
-      behavior: prefersReduced ? "auto" : "smooth",
-      block: "start"
-    });
-  }
-
-  function initParallax() {
-    if (prefersReduced) return;
-    const flora = document.querySelectorAll(".flora");
-    window.addEventListener(
-      "scroll",
-      () => {
-        const y = window.scrollY;
-        flora.forEach((el, i) => {
-          const speed = i % 2 === 0 ? 0.04 : -0.03;
-          el.style.transform = el.classList.contains("flora-br")
-            ? "rotate(178deg) translate3d(0," + y * speed + "px,0)"
-            : "translate3d(0," + y * speed + "px,0)";
-        });
-      },
-      { passive: true }
-    );
-  }
-
-  function initEventNav() {
-    const links = [...els.eventNav.querySelectorAll("a")];
-    if (!links.length) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          links.forEach((a) =>
-            a.classList.toggle("is-active", a.dataset.target === entry.target.id)
-          );
-        });
-      },
-      { threshold: 0.55 }
-    );
-    W.events.forEach((event) => {
-      const panel = document.getElementById("event-" + event.id);
-      if (panel) io.observe(panel);
-    });
-  }
-
-  function remaining() {
-    let ms = new Date(W.datetime.iso).getTime() - Date.now();
-    if (ms <= 0) return null;
-    const days = Math.floor(ms / 86400000);
-    ms -= days * 86400000;
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return { days, minutes, seconds };
-  }
-
-  function pad(n) {
-    return String(n).padStart(2, "0");
-  }
-
-  function tickCountdown() {
-    const left = remaining();
-    if (!left) {
-      els.countRow.hidden = true;
-      els.todayMsg.hidden = false;
-      if (countdownTimer) window.clearInterval(countdownTimer);
-      return;
-    }
-    document.getElementById("cDays").textContent = pad(left.days);
-    document.getElementById("cMinutes").textContent = pad(left.minutes);
-    document.getElementById("cSeconds").textContent = pad(left.seconds);
-  }
-
-  function startCountdown() {
-    tickCountdown();
-    if (countdownTimer) window.clearInterval(countdownTimer);
-    countdownTimer = window.setInterval(tickCountdown, 1000);
-  }
-
   function heartPath(width, height) {
     const path = new Path2D();
-    path.addPath(
-      new Path2D(HEART_D),
-      new DOMMatrix().scale(width / 300, height / 280)
-    );
+    path.addPath(new Path2D(HEART_D), new DOMMatrix().scale(width / 300, height / 280));
     return path;
   }
 
@@ -268,19 +193,40 @@
     ctx.save();
     ctx.clearRect(0, 0, width, height);
     ctx.clip(path);
+
+    const base = ctx.createLinearGradient(0, height * 0.1, width, height);
+    base.addColorStop(0, "#c8d2c4");
+    base.addColorStop(0.4, "#a8b49f");
+    base.addColorStop(0.72, "#b69a70");
+    base.addColorStop(1, "#899486");
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, width, height);
+
     const glow = ctx.createRadialGradient(
       width * 0.5,
-      height * 0.38,
-      width * 0.08,
+      height * 0.34,
+      width * 0.04,
       width * 0.5,
       height * 0.46,
       width * 0.52
     );
-    glow.addColorStop(0, "#d9c2ba");
-    glow.addColorStop(0.45, "#c4b496");
-    glow.addColorStop(1, "#8f9d84");
+    glow.addColorStop(0, "rgba(248, 250, 246, 0.62)");
+    glow.addColorStop(0.5, "rgba(182, 154, 112, 0.22)");
+    glow.addColorStop(1, "rgba(137, 148, 134, 0.45)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, width, height);
+
+    ctx.globalAlpha = 0.16;
+    for (let i = 0; i < 12; i += 1) {
+      const x = width * (0.2 + ((i * 37) % 60) / 100);
+      const y = height * (0.22 + ((i * 53) % 55) / 100);
+      const r = width * (0.018 + (i % 3) * 0.012);
+      ctx.beginPath();
+      ctx.ellipse(x, y, r, r * 0.72, i * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = i % 2 ? "#f4f7f2" : "#6f7d6c";
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
@@ -305,29 +251,8 @@
     if (dateOpened) return;
     dateOpened = true;
     els.heartStage.classList.add("is-open");
-    spawnPetals(els.heartPetals, prefersReduced ? 0 : 18);
-    els.afterReveal.hidden = false;
-    requestAnimationFrame(() => {
-      revealSections(els.afterReveal);
-      initEventNav();
-    });
-    startCountdown();
-
-    const wait = prefersReduced ? 0 : 3000;
-    const onUserScroll = () => {
-      window.clearTimeout(celebrateTimer);
-      window.removeEventListener("wheel", onUserScroll);
-      window.removeEventListener("touchmove", onUserScroll);
-    };
-    const celebrateTimer = window.setTimeout(() => {
-      window.removeEventListener("wheel", onUserScroll);
-      window.removeEventListener("touchmove", onUserScroll);
-      scrollToCelebration();
-    }, wait);
-    window.setTimeout(() => {
-      window.addEventListener("wheel", onUserScroll, { passive: true });
-      window.addEventListener("touchmove", onUserScroll, { passive: true });
-    }, 450);
+    if (els.revealFallback) els.revealFallback.hidden = true;
+    spawnPetals(els.heartPetals, prefersReduced ? 0 : 14);
   }
 
   function initScratch() {
@@ -354,9 +279,10 @@
     function pointFromEvent(event) {
       const touch = event.touches ? event.touches[0] : event;
       const rect = canvas.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width) * canvas.width;
-      const y = ((touch.clientY - rect.top) / rect.height) * canvas.height;
-      return { x, y };
+      return {
+        x: ((touch.clientX - rect.left) / rect.width) * canvas.width,
+        y: ((touch.clientY - rect.top) / rect.height) * canvas.height
+      };
     }
 
     function eraseAt(from, to) {
@@ -368,7 +294,7 @@
       ctx.globalCompositeOperation = "destination-out";
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.lineWidth = Math.max(28, canvas.width * 0.09);
+      ctx.lineWidth = Math.max(30, canvas.width * 0.1);
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
@@ -381,8 +307,8 @@
     }
 
     function maybeFinish() {
-      const need = prefersReduced ? 36 : 70;
-      const ratio = prefersReduced ? 0.28 : 0.4;
+      const need = prefersReduced ? 30 : 60;
+      const ratio = prefersReduced ? 0.35 : 0.5;
       if (travel < need) return;
       if (percentCleared(ctx, canvas.width, canvas.height) >= ratio) finishReveal();
     }
@@ -394,6 +320,11 @@
       last = pointFromEvent(event);
       travel = 0;
       stage.classList.add("is-scratching");
+      try {
+        canvas.setPointerCapture(event.pointerId);
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     function move(event) {
@@ -442,6 +373,8 @@
       document.getElementById("opening").classList.add("is-visible");
       revealSections(els.invitation);
       initScratch();
+      startAmbientPetals();
+      if (!prefersReduced) spawnPetals(els.petalField, 14);
     });
 
     const reveal = () => {
@@ -466,7 +399,7 @@
     if (audioCtx.state === "suspended") audioCtx.resume();
     if (padNodes) return;
     const master = audioCtx.createGain();
-    master.gain.value = 0.045;
+    master.gain.value = 0.04;
     master.connect(audioCtx.destination);
     const freqs = [196, 246.94, 293.66];
     padNodes = freqs.map((freq, i) => {
@@ -503,12 +436,13 @@
   }
 
   els.openBtn.addEventListener("click", openInvitation);
-  els.langBtn.addEventListener("click", () => {
-    lang = lang === "en" ? "ur" : "en";
-    applyI18n();
-  });
   els.musicBtn.addEventListener("click", toggleMusic);
+  if (els.revealFallback) els.revealFallback.addEventListener("click", finishReveal);
+  if (els.mapsLink) els.mapsLink.href = W.venue.mapsUrl;
+  if (els.langEn) els.langEn.addEventListener("click", () => setLang("en"));
+  if (els.langHi) els.langHi.addEventListener("click", () => setLang("hi"));
+  if (els.langUr) els.langUr.addEventListener("click", () => setLang("ur"));
 
-  fillStatic();
-  initParallax();
+  applyI18n();
+  preloadArt();
 })();

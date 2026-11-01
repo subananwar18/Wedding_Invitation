@@ -1,0 +1,14 @@
+{
+  "name": "afzal-shahin-wedding",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Afzal & Shahin luxury watercolor wedding invitation",
+  "scripts": {
+    "start": "npx --yes serve -l 4173 .",
+    "cutouts": "node scripts/make-cutouts.js"
+  },
+  "devDependencies": {
+    "@imgly/background-removal-node": "^1.4.5",
+    "sharp": "^0.33.5"
+  }
+}
