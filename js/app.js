@@ -27,8 +27,7 @@
     countSeconds: document.getElementById("countSeconds")
   };
 
-  const savedLang = localStorage.getItem("wedding-lang");
-  let lang = savedLang === "ur" || savedLang === "hi" ? savedLang : "en";
+  let lang = "en";
   let opening = false;
   let dateOpened = false;
   let scratchReady = false;
@@ -85,7 +84,6 @@
   function setLang(next) {
     if (next === lang) return;
     lang = next;
-    localStorage.setItem("wedding-lang", lang);
     if (els.invitation && !els.invitation.hidden) {
       els.invitation.classList.add("is-lang-switching");
       window.setTimeout(() => {
