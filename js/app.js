@@ -20,7 +20,11 @@
     mapsLink: document.getElementById("mapsLink"),
     langEn: document.getElementById("langEn"),
     langHi: document.getElementById("langHi"),
-    langUr: document.getElementById("langUr")
+    langUr: document.getElementById("langUr"),
+    countDays: document.getElementById("countDays"),
+    countHours: document.getElementById("countHours"),
+    countMinutes: document.getElementById("countMinutes"),
+    countSeconds: document.getElementById("countSeconds")
   };
 
   const savedLang = localStorage.getItem("wedding-lang");
@@ -424,6 +428,28 @@
     setMusicPlaying(!musicOn);
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function tickCountdown() {
+    const target = new Date(W.nikah.iso).getTime();
+    const diff = Math.max(0, target - Date.now());
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    if (els.countDays) els.countDays.textContent = pad2(days);
+    if (els.countHours) els.countHours.textContent = pad2(hours);
+    if (els.countMinutes) els.countMinutes.textContent = pad2(minutes);
+    if (els.countSeconds) els.countSeconds.textContent = pad2(seconds);
+  }
+
+  function startCountdown() {
+    tickCountdown();
+    window.setInterval(tickCountdown, 1000);
+  }
+
   els.openBtn.addEventListener("click", openInvitation);
   els.musicBtn.addEventListener("click", toggleMusic);
   if (els.revealFallback) els.revealFallback.addEventListener("click", finishReveal);
@@ -434,4 +460,5 @@
 
   applyI18n();
   preloadArt();
+  startCountdown();
 })();
