@@ -103,7 +103,7 @@ window.WEDDING = {
       bismillahEn: "In the name of Allah, the Most Gracious, the Most Merciful.",
       guestDefault: "Guest",
       guestInviteMessage:
-        "We warmly invite you to be a part of our wedding celebration.<br />Your gracious presence will make our special day even more memorable.",
+        "We warmly invite you to be a part of our wedding celebration. Your gracious presence will make our special day even more memorable.",
       coupleNames: "AFZAL<br /><span class=\"amp\">&amp;</span><br />SHAHIN",
       weddingCelebration: "A Wedding Celebration",
       monthLabel: "November 2026",
@@ -168,7 +168,7 @@ window.WEDDING = {
       bismillahEn: "अल्लाह के नाम से जो बड़ा कृपालु, अत्यंत दयालु है।",
       guestDefault: "अतिथि",
       guestInviteMessage:
-        "हम आपको हमारे विवाह उत्सव का हिस्सा बनने के लिए हार्दिक निमंत्रण देते हैं।<br />आपकी कृपापूर्ण उपस्थिति हमारे इस खास दिन को और यादगार बना देगी।",
+        "हम आपको हमारे विवाह उत्सव का हिस्सा बनने के लिए हार्दिक निमंत्रण देते हैं। आपकी कृपापूर्ण उपस्थिति हमारे इस खास दिन को और यादगार बना देगी।",
       coupleNames: "अफजल<br /><span class=\"amp\">&amp;</span><br />शाहीन",
       weddingCelebration: "शादी का उत्सव",
       monthLabel: "नवम्बर 2026",
@@ -233,7 +233,7 @@ window.WEDDING = {
       bismillahEn: "اللہ کے نام سے جو بڑا مہربان، نہایت رحم والا ہے۔",
       guestDefault: "مہمان",
       guestInviteMessage:
-        "ہم آپ کو ہماری شادی کی تقریب کا حصہ بننے کی دل سے دعوت دیتے ہیں۔<br />آپ کی شاندار موجودگی ہمارے اس خاص دن کو اور یادگار بنا دے گی۔",
+        "ہم آپ کو ہماری شادی کی تقریب کا حصہ بننے کی دل سے دعوت دیتے ہیں۔ آپ کی شاندار موجودگی ہمارے اس خاص دن کو اور یادگار بنا دے گی۔",
       coupleNames: "افضل<br /><span class=\"amp\">&amp;</span><br />شاہین",
       weddingCelebration: "شادی کی تقریب",
       monthLabel: "نومبر ۲۰۲۶",
