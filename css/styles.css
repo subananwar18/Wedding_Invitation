@@ -28,6 +28,10 @@ html {
   scroll-behavior: smooth;
 }
 
+html.is-auto-scrolling {
+  scroll-behavior: auto !important;
+}
+
 html,
 body {
   margin: 0;
@@ -39,6 +43,7 @@ body {
   font-size: 16px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -104,7 +109,16 @@ a {
   width: min(100%, 26.5rem);
   margin: 0 auto;
   min-height: 100svh;
-  overflow-x: hidden;
+  /* clip avoids creating a scroll container (overflow-x:hidden can break iOS window scroll) */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+@supports not (overflow-x: clip) {
+  .app {
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
 }
 
 @media (min-width: 480px) {
@@ -258,6 +272,16 @@ html[lang="hi"] .eyebrow {
 
 body.is-sealed {
   overflow: hidden;
+  position: relative;
+  height: 100%;
+  touch-action: none;
+}
+
+body.is-invitation-open {
+  overflow: auto;
+  height: auto;
+  touch-action: manipulation;
+  overscroll-behavior-y: auto;
 }
 
 body.is-sealed .top-bar {

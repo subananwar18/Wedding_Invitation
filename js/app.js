@@ -534,13 +534,19 @@
     });
   }
 
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
   function getScrollY() {
-    return (
-      window.pageYOffset ||
-      document.documentElement.scrollTop ||
-      document.body.scrollTop ||
-      0
-    );
+    return window.pageYOffset || document.documentElement.scrollTop || 0;
+  }
+
+  function getViewportHeight() {
+    if (window.visualViewport && window.visualViewport.height) {
+      return window.visualViewport.height;
+    }
+    return window.innerHeight || document.documentElement.clientHeight || 0;
   }
 
   function getMaxScrollY() {
@@ -552,22 +558,31 @@
       doc.offsetHeight,
       body ? body.offsetHeight : 0
     );
-    return Math.max(0, height - window.innerHeight);
+    return Math.max(0, height - getViewportHeight());
   }
 
   function setScrollY(y) {
     const top = Math.max(0, y);
-    try {
-      window.scrollTo(0, top);
-    } catch (e) {
-      /* ignore */
-    }
-    document.documentElement.scrollTop = top;
-    if (document.body) document.body.scrollTop = top;
+    // iOS Safari: only use window.scrollTo — writing body+documentElement fights itself.
+    window.scrollTo(0, top);
+  }
+
+  function unlockPageScroll() {
+    document.body.classList.remove("is-sealed");
+    document.body.classList.add("is-invitation-open");
+    document.documentElement.style.overflow = "auto";
+    document.body.style.overflow = "auto";
+    document.documentElement.style.height = "auto";
+    document.body.style.height = "auto";
+    document.body.style.position = "";
+    document.body.style.touchAction = "";
+    // Force Safari to recompute scrollability after overflow:hidden.
+    void document.body.offsetHeight;
   }
 
   function stopAutoScroll() {
     autoScrollOn = false;
+    document.documentElement.classList.remove("is-auto-scrolling");
     if (autoScrollRaf) {
       cancelAnimationFrame(autoScrollRaf);
       autoScrollRaf = 0;
@@ -575,34 +590,30 @@
   }
 
   function startAutoScroll() {
-    if (prefersReduced || autoScrollOn) return;
+    // Keep auto-scroll even with iOS "Reduce Motion" — otherwise invites never scroll on many iPhones.
+    if (autoScrollOn) return;
+    unlockPageScroll();
+
     if (getMaxScrollY() < 8) {
-      window.setTimeout(startAutoScroll, 250);
+      window.setTimeout(startAutoScroll, 300);
       return;
     }
 
     autoScrollOn = true;
-    const root = document.documentElement;
-    const body = document.body;
-    const prevRootBehavior = root.style.scrollBehavior;
-    const prevBodyBehavior = body ? body.style.scrollBehavior : "";
-    root.style.scrollBehavior = "auto";
-    if (body) body.style.scrollBehavior = "auto";
+    document.documentElement.classList.add("is-auto-scrolling");
 
     let last = performance.now();
-    let lockedY = getScrollY();
-    let ignoreScrollUntil = 0;
-    let idleFrames = 0;
-    const pxPerSec = 34;
+    let expectedY = getScrollY();
+    let stuckFrames = 0;
+    let readyFrames = 0;
+    const pxPerSec = isIOS ? 30 : 34;
 
     const cleanup = () => {
-      root.style.scrollBehavior = prevRootBehavior;
-      if (body) body.style.scrollBehavior = prevBodyBehavior;
+      document.documentElement.classList.remove("is-auto-scrolling");
       window.removeEventListener("wheel", onWheelHalt, true);
       window.removeEventListener("touchstart", onTouchStart, true);
       window.removeEventListener("touchmove", onTouchMove, true);
       window.removeEventListener("keydown", onKeyHalt, true);
-      window.removeEventListener("scroll", onScrollHalt, true);
     };
 
     const halt = () => {
@@ -626,36 +637,52 @@
     const onTouchMove = (event) => {
       const y = event.touches && event.touches[0] ? event.touches[0].clientY : null;
       if (y == null || touchStartY == null) return;
-      if (Math.abs(y - touchStartY) > 14) halt();
-    };
-
-    const onScrollHalt = () => {
-      if (!autoScrollOn) return;
-      if (performance.now() < ignoreScrollUntil) return;
-      if (Math.abs(getScrollY() - lockedY) > 48) halt();
+      // Larger threshold on iOS to avoid cancelling from tiny finger jitter.
+      if (Math.abs(y - touchStartY) > (isIOS ? 22 : 14)) halt();
     };
 
     const step = (now) => {
       if (!autoScrollOn) return;
-      const dt = Math.min(64, Math.max(0, now - last)) / 1000;
+      const dt = Math.min(50, Math.max(0, now - last)) / 1000;
       last = now;
+
       const maxY = getMaxScrollY();
       if (maxY < 8) {
-        idleFrames += 1;
-        if (idleFrames > 180) {
+        readyFrames += 1;
+        if (readyFrames > 200) {
           halt();
           return;
         }
         autoScrollRaf = requestAnimationFrame(step);
         return;
       }
-      idleFrames = 0;
-      const current = getScrollY();
-      const next = Math.min(maxY, current + pxPerSec * dt);
-      lockedY = next;
-      ignoreScrollUntil = performance.now() + 120;
+
+      const before = getScrollY();
+      const delta = Math.max(0.5, pxPerSec * dt);
+      const next = Math.min(maxY, before + delta);
+      expectedY = next;
       setScrollY(next);
-      if (next >= maxY - 2) {
+
+      const after = getScrollY();
+      if (after < before + 0.25 && next < maxY - 2) {
+        stuckFrames += 1;
+        // Fallback nudge if Safari ignored scrollTo
+        if (stuckFrames === 3) {
+          try {
+            window.scrollBy(0, Math.ceil(delta));
+          } catch (e) {
+            /* ignore */
+          }
+        }
+        if (stuckFrames > 45) {
+          halt();
+          return;
+        }
+      } else {
+        stuckFrames = 0;
+      }
+
+      if (next >= maxY - 2 || after >= maxY - 2) {
         halt();
         return;
       }
@@ -666,7 +693,7 @@
     window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true, capture: true });
     window.addEventListener("keydown", onKeyHalt, true);
-    window.addEventListener("scroll", onScrollHalt, { passive: true, capture: true });
+    // Do NOT listen to "scroll" for halt — iOS rubber-banding false-triggers and kills auto-scroll.
 
     autoScrollRaf = requestAnimationFrame(step);
   }
@@ -690,10 +717,10 @@
             window.setTimeout(kickoff, 120);
             return;
           }
-          // Wait for layout/images so scroll height is ready on mobile WebViews.
+          unlockPageScroll();
           window.setTimeout(() => {
             requestAnimationFrame(() => startAutoScroll());
-          }, prefersReduced ? 0 : 700);
+          }, isIOS ? 900 : 700);
         };
         kickoff();
       });
@@ -703,7 +730,7 @@
       els.cover.classList.add("is-open");
       window.setTimeout(() => {
         els.cover.hidden = true;
-        document.body.classList.remove("is-sealed");
+        unlockPageScroll();
       }, prefersReduced ? 0 : 2100);
     };
 
