@@ -534,6 +534,38 @@
     });
   }
 
+  function getScrollY() {
+    return (
+      window.pageYOffset ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+    );
+  }
+
+  function getMaxScrollY() {
+    const doc = document.documentElement;
+    const body = document.body;
+    const height = Math.max(
+      doc.scrollHeight,
+      body ? body.scrollHeight : 0,
+      doc.offsetHeight,
+      body ? body.offsetHeight : 0
+    );
+    return Math.max(0, height - window.innerHeight);
+  }
+
+  function setScrollY(y) {
+    const top = Math.max(0, y);
+    try {
+      window.scrollTo(0, top);
+    } catch (e) {
+      /* ignore */
+    }
+    document.documentElement.scrollTop = top;
+    if (document.body) document.body.scrollTop = top;
+  }
+
   function stopAutoScroll() {
     autoScrollOn = false;
     if (autoScrollRaf) {
@@ -544,62 +576,97 @@
 
   function startAutoScroll() {
     if (prefersReduced || autoScrollOn) return;
+    if (getMaxScrollY() < 8) {
+      window.setTimeout(startAutoScroll, 250);
+      return;
+    }
+
     autoScrollOn = true;
     const root = document.documentElement;
-    const prevBehavior = root.style.scrollBehavior;
+    const body = document.body;
+    const prevRootBehavior = root.style.scrollBehavior;
+    const prevBodyBehavior = body ? body.style.scrollBehavior : "";
     root.style.scrollBehavior = "auto";
+    if (body) body.style.scrollBehavior = "auto";
+
     let last = performance.now();
-    let lockedY = window.scrollY;
-    const pxPerSec = 32;
+    let lockedY = getScrollY();
+    let ignoreScrollUntil = 0;
+    let idleFrames = 0;
+    const pxPerSec = 34;
+
+    const cleanup = () => {
+      root.style.scrollBehavior = prevRootBehavior;
+      if (body) body.style.scrollBehavior = prevBodyBehavior;
+      window.removeEventListener("wheel", onWheelHalt, true);
+      window.removeEventListener("touchstart", onTouchStart, true);
+      window.removeEventListener("touchmove", onTouchMove, true);
+      window.removeEventListener("keydown", onKeyHalt, true);
+      window.removeEventListener("scroll", onScrollHalt, true);
+    };
 
     const halt = () => {
       if (!autoScrollOn) return;
       stopAutoScroll();
-      root.style.scrollBehavior = prevBehavior;
-      window.removeEventListener("wheel", halt);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("keydown", onKeyHalt);
-      window.removeEventListener("scroll", onScrollHalt);
+      cleanup();
     };
+
     const onKeyHalt = (event) => {
       const keys = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "];
       if (keys.includes(event.key)) halt();
     };
-    let touchY = null;
+
+    const onWheelHalt = () => halt();
+
+    let touchStartY = null;
+    const onTouchStart = (event) => {
+      const y = event.touches && event.touches[0] ? event.touches[0].clientY : null;
+      touchStartY = y;
+    };
     const onTouchMove = (event) => {
       const y = event.touches && event.touches[0] ? event.touches[0].clientY : null;
-      if (y == null) return;
-      if (touchY != null && Math.abs(y - touchY) > 6) halt();
-      touchY = y;
+      if (y == null || touchStartY == null) return;
+      if (Math.abs(y - touchStartY) > 14) halt();
     };
+
     const onScrollHalt = () => {
       if (!autoScrollOn) return;
-      if (Math.abs(window.scrollY - lockedY) > 10) halt();
+      if (performance.now() < ignoreScrollUntil) return;
+      if (Math.abs(getScrollY() - lockedY) > 48) halt();
     };
 
     const step = (now) => {
       if (!autoScrollOn) return;
-      const dt = Math.min(48, now - last) / 1000;
+      const dt = Math.min(64, Math.max(0, now - last)) / 1000;
       last = now;
-      const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const maxY = getMaxScrollY();
       if (maxY < 8) {
+        idleFrames += 1;
+        if (idleFrames > 180) {
+          halt();
+          return;
+        }
         autoScrollRaf = requestAnimationFrame(step);
         return;
       }
-      const next = Math.min(maxY, window.scrollY + pxPerSec * dt);
+      idleFrames = 0;
+      const current = getScrollY();
+      const next = Math.min(maxY, current + pxPerSec * dt);
       lockedY = next;
-      window.scrollTo({ top: next, left: 0, behavior: "auto" });
-      if (next >= maxY - 1) {
+      ignoreScrollUntil = performance.now() + 120;
+      setScrollY(next);
+      if (next >= maxY - 2) {
         halt();
         return;
       }
       autoScrollRaf = requestAnimationFrame(step);
     };
 
-    window.addEventListener("wheel", halt, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("keydown", onKeyHalt);
-    window.addEventListener("scroll", onScrollHalt, { passive: true });
+    window.addEventListener("wheel", onWheelHalt, { passive: true, capture: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true, capture: true });
+    window.addEventListener("keydown", onKeyHalt, true);
+    window.addEventListener("scroll", onScrollHalt, { passive: true, capture: true });
 
     autoScrollRaf = requestAnimationFrame(step);
   }
@@ -623,7 +690,10 @@
             window.setTimeout(kickoff, 120);
             return;
           }
-          window.setTimeout(startAutoScroll, prefersReduced ? 0 : 500);
+          // Wait for layout/images so scroll height is ready on mobile WebViews.
+          window.setTimeout(() => {
+            requestAnimationFrame(() => startAutoScroll());
+          }, prefersReduced ? 0 : 700);
         };
         kickoff();
       });
