@@ -229,8 +229,6 @@
     return path;
   }
 
-  const SCRATCH_STORAGE_KEY = "afzal-shahin-scratch-revealed";
-
   function paintHeartCover(ctx, width, height) {
     const path = heartPath(width, height);
     ctx.save();
@@ -327,26 +325,9 @@
     }, 1400);
   }
 
-  function persistScratchReveal() {
-    try {
-      localStorage.setItem(SCRATCH_STORAGE_KEY, "1");
-    } catch (e) {
-      /* ignore */
-    }
-  }
-
-  function wasScratchRevealed() {
-    try {
-      return localStorage.getItem(SCRATCH_STORAGE_KEY) === "1";
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function finishReveal(opts) {
+  function finishReveal() {
     if (dateOpened) return;
     dateOpened = true;
-    const silent = !!(opts && opts.silent);
     document.body.classList.remove("is-scratch-locking");
     if (els.scratchCanvas) {
       const ctx = els.scratchCanvas.getContext("2d");
@@ -354,11 +335,8 @@
     }
     els.heartStage.classList.add("is-open");
     if (els.revealFallback) els.revealFallback.hidden = true;
-    if (!silent) {
-      spawnHeartBurst();
-      spawnPetals(els.heartPetals, prefersReduced ? 0 : 16);
-    }
-    persistScratchReveal();
+    spawnHeartBurst();
+    spawnPetals(els.heartPetals, prefersReduced ? 0 : 16);
   }
 
   function initScratch() {
@@ -366,10 +344,10 @@
     const stage = els.heartStage;
     if (!canvas || !stage || scratchReady) return;
 
-    if (wasScratchRevealed()) {
-      finishReveal({ silent: true });
-      scratchReady = true;
-      return;
+    try {
+      localStorage.removeItem("afzal-shahin-scratch-revealed");
+    } catch (e) {
+      /* ignore */
     }
 
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
