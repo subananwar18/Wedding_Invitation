@@ -12,6 +12,7 @@
     heartStage: document.getElementById("heartStage"),
     heartPetals: document.getElementById("heartPetals"),
     scratchCanvas: document.getElementById("scratchCanvas"),
+    heartBurst: document.getElementById("heartBurst"),
     revealFallback: document.getElementById("revealFallback"),
     events: document.getElementById("events"),
     musicBtn: document.getElementById("musicBtn"),
@@ -24,7 +25,11 @@
     countDays: document.getElementById("countDays"),
     countHours: document.getElementById("countHours"),
     countMinutes: document.getElementById("countMinutes"),
-    countSeconds: document.getElementById("countSeconds")
+    countSeconds: document.getElementById("countSeconds"),
+    bismillah: document.querySelector(".bismillah"),
+    dateReveal: document.getElementById("dateReveal"),
+    guestName: document.getElementById("guestName"),
+    guestGreeting: document.getElementById("guestGreeting")
   };
 
   let lang = "en";
@@ -32,6 +37,9 @@
   let dateOpened = false;
   let scratchReady = false;
   let musicOn = false;
+  let autoScrollOn = false;
+  let autoScrollRaf = 0;
+  let heroTyped = false;
 
   if (els.bgMusic) {
     els.bgMusic.volume = 0.55;
@@ -41,6 +49,32 @@
   function t(key) {
     const dict = W.i18n[lang] || W.i18n.en;
     return dict[key] != null ? dict[key] : W.i18n.en[key] || key;
+  }
+
+  function readGuestNameFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("name")) return null;
+    const raw = params.get("name");
+    if (raw == null) return null;
+    const cleaned = String(raw)
+      .replace(/[\u0000-\u001F\u007F]/g, "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 80);
+    return cleaned || null;
+  }
+
+  const guestNameFromUrl = readGuestNameFromUrl();
+
+  function applyGuestName() {
+    if (!els.guestGreeting || !els.guestName) return;
+    if (!guestNameFromUrl) {
+      els.guestGreeting.hidden = true;
+      els.guestName.textContent = "";
+      return;
+    }
+    els.guestName.textContent = guestNameFromUrl;
+    els.guestGreeting.hidden = false;
   }
 
   function applyI18n() {
@@ -78,6 +112,7 @@
     if (els.heartStage) els.heartStage.setAttribute("aria-label", t("scratchAria"));
     if (els.events) els.events.setAttribute("aria-label", t("programmeAria"));
 
+    applyGuestName();
     renderEvents();
   }
 
@@ -194,45 +229,63 @@
     return path;
   }
 
+  const SCRATCH_STORAGE_KEY = "afzal-shahin-scratch-revealed";
+
   function paintHeartCover(ctx, width, height) {
     const path = heartPath(width, height);
     ctx.save();
     ctx.clearRect(0, 0, width, height);
     ctx.clip(path);
 
-    const base = ctx.createLinearGradient(0, height * 0.1, width, height);
-    base.addColorStop(0, "#c8d2c4");
-    base.addColorStop(0.4, "#a8b49f");
-    base.addColorStop(0.72, "#b69a70");
-    base.addColorStop(1, "#899486");
+    const base = ctx.createLinearGradient(0, 0, width, height);
+    base.addColorStop(0, "#d9c7a8");
+    base.addColorStop(0.28, "#c4b089");
+    base.addColorStop(0.55, "#b7a07a");
+    base.addColorStop(0.78, "#9f8a68");
+    base.addColorStop(1, "#8d7a5c");
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, width, height);
 
+    const sheen = ctx.createLinearGradient(0, height * 0.05, width * 0.9, height);
+    sheen.addColorStop(0, "rgba(255, 250, 240, 0.55)");
+    sheen.addColorStop(0.35, "rgba(255, 255, 255, 0.08)");
+    sheen.addColorStop(0.55, "rgba(120, 100, 70, 0.18)");
+    sheen.addColorStop(1, "rgba(255, 248, 236, 0.28)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, width, height);
+
     const glow = ctx.createRadialGradient(
-      width * 0.5,
-      height * 0.34,
+      width * 0.42,
+      height * 0.3,
       width * 0.04,
       width * 0.5,
-      height * 0.46,
-      width * 0.52
+      height * 0.48,
+      width * 0.55
     );
-    glow.addColorStop(0, "rgba(248, 250, 246, 0.62)");
-    glow.addColorStop(0.5, "rgba(182, 154, 112, 0.22)");
-    glow.addColorStop(1, "rgba(137, 148, 134, 0.45)");
+    glow.addColorStop(0, "rgba(255, 252, 245, 0.5)");
+    glow.addColorStop(0.55, "rgba(182, 154, 112, 0.12)");
+    glow.addColorStop(1, "rgba(90, 74, 52, 0.28)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.globalAlpha = 0.16;
-    for (let i = 0; i < 12; i += 1) {
-      const x = width * (0.2 + ((i * 37) % 60) / 100);
-      const y = height * (0.22 + ((i * 53) % 55) / 100);
-      const r = width * (0.018 + (i % 3) * 0.012);
+    ctx.globalAlpha = 0.14;
+    for (let i = 0; i < 28; i += 1) {
+      const x = width * ((i * 47) % 100) / 100;
+      const y = height * ((i * 73) % 100) / 100;
+      const r = width * (0.01 + (i % 4) * 0.006);
       ctx.beginPath();
-      ctx.ellipse(x, y, r, r * 0.72, i * 0.4, 0, Math.PI * 2);
-      ctx.fillStyle = i % 2 ? "#f4f7f2" : "#6f7d6c";
+      ctx.ellipse(x, y, r * 1.8, r, i * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = i % 2 ? "#fff8ef" : "#6a5840";
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = "rgba(255, 248, 236, 0.35)";
+    ctx.lineWidth = Math.max(1, width * 0.004);
+    ctx.beginPath();
+    ctx.moveTo(width * 0.22, height * 0.28);
+    ctx.quadraticCurveTo(width * 0.48, height * 0.18, width * 0.72, height * 0.34);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -247,24 +300,77 @@
         if (!ctx.isPointInPath(path, x, y)) continue;
         inside += 1;
         const alpha = data[(y * width + x) * 4 + 3];
-        if (alpha < 40) cleared += 1;
+        if (alpha < 48) cleared += 1;
       }
     }
     return inside ? cleared / inside : 0;
   }
 
-  function finishReveal() {
+  function spawnHeartBurst() {
+    if (!els.heartBurst || prefersReduced) return;
+    els.heartBurst.innerHTML = "";
+    els.heartBurst.classList.add("is-on");
+    const count = 10;
+    for (let i = 0; i < count; i += 1) {
+      const bit = document.createElement("span");
+      const angle = (Math.PI * 2 * i) / count;
+      const dist = 36 + (i % 3) * 18;
+      bit.style.setProperty("--hx", `${Math.cos(angle) * dist}px`);
+      bit.style.setProperty("--hy", `${Math.sin(angle) * dist - 18}px`);
+      bit.style.animationDelay = `${i * 0.04}s`;
+      els.heartBurst.appendChild(bit);
+    }
+    window.setTimeout(() => {
+      if (!els.heartBurst) return;
+      els.heartBurst.classList.remove("is-on");
+      els.heartBurst.innerHTML = "";
+    }, 1400);
+  }
+
+  function persistScratchReveal() {
+    try {
+      localStorage.setItem(SCRATCH_STORAGE_KEY, "1");
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function wasScratchRevealed() {
+    try {
+      return localStorage.getItem(SCRATCH_STORAGE_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function finishReveal(opts) {
     if (dateOpened) return;
     dateOpened = true;
+    const silent = !!(opts && opts.silent);
+    document.body.classList.remove("is-scratch-locking");
+    if (els.scratchCanvas) {
+      const ctx = els.scratchCanvas.getContext("2d");
+      if (ctx) ctx.clearRect(0, 0, els.scratchCanvas.width, els.scratchCanvas.height);
+    }
     els.heartStage.classList.add("is-open");
     if (els.revealFallback) els.revealFallback.hidden = true;
-    spawnPetals(els.heartPetals, prefersReduced ? 0 : 14);
+    if (!silent) {
+      spawnHeartBurst();
+      spawnPetals(els.heartPetals, prefersReduced ? 0 : 16);
+    }
+    persistScratchReveal();
   }
 
   function initScratch() {
     const canvas = els.scratchCanvas;
     const stage = els.heartStage;
     if (!canvas || !stage || scratchReady) return;
+
+    if (wasScratchRevealed()) {
+      finishReveal({ silent: true });
+      scratchReady = true;
+      return;
+    }
 
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     let drawing = false;
@@ -291,32 +397,68 @@
       };
     }
 
-    function eraseAt(from, to) {
+    function eraseSegment(from, to) {
       const path = heartPath(canvas.width, canvas.height);
       if (!ctx.isPointInPath(path, to.x, to.y) && !ctx.isPointInPath(path, from.x, from.y)) {
         return false;
       }
+      const brush = Math.max(34, canvas.width * 0.11);
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.lineWidth = Math.max(30, canvas.width * 0.1);
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(to.x, to.y);
-      ctx.stroke();
+      if (from.x === to.x && from.y === to.y) {
+        ctx.beginPath();
+        ctx.arc(to.x, to.y, brush * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.lineWidth = brush;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+        ctx.lineWidth = brush * 0.55;
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+      }
       ctx.restore();
       const dx = to.x - from.x;
       const dy = to.y - from.y;
-      travel += Math.sqrt(dx * dx + dy * dy);
+      travel += Math.max(brush * 0.25, Math.sqrt(dx * dx + dy * dy));
       return true;
     }
 
+    function eraseAt(from, to) {
+      if (!from || !to) return false;
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const steps = Math.max(1, Math.ceil(dist / Math.max(6, canvas.width * 0.018)));
+      let ok = false;
+      let prev = from;
+      for (let i = 1; i <= steps; i += 1) {
+        const next = {
+          x: from.x + (dx * i) / steps,
+          y: from.y + (dy * i) / steps
+        };
+        if (eraseSegment(prev, next)) ok = true;
+        prev = next;
+      }
+      return ok;
+    }
+
     function maybeFinish() {
-      const need = prefersReduced ? 30 : 60;
-      const ratio = prefersReduced ? 0.35 : 0.5;
+      const need = prefersReduced ? 24 : 48;
+      const ratio = 0.65;
       if (travel < need) return;
       if (percentCleared(ctx, canvas.width, canvas.height) >= ratio) finishReveal();
+    }
+
+    function lockScroll(on) {
+      document.body.classList.toggle("is-scratch-locking", !!on);
     }
 
     function start(event) {
@@ -324,13 +466,14 @@
       event.preventDefault();
       drawing = true;
       last = pointFromEvent(event);
-      travel = 0;
       stage.classList.add("is-scratching");
+      lockScroll(true);
       try {
         canvas.setPointerCapture(event.pointerId);
       } catch (e) {
         /* ignore */
       }
+      eraseAt(last, last);
     }
 
     function move(event) {
@@ -347,18 +490,28 @@
       if (event) event.preventDefault();
       drawing = false;
       last = null;
+      lockScroll(false);
       maybeFinish();
     }
 
     canvas.addEventListener("pointerdown", start);
     canvas.addEventListener("pointermove", move);
     canvas.addEventListener("pointerup", end);
-    canvas.addEventListener("pointerleave", end);
     canvas.addEventListener("pointercancel", end);
+    canvas.addEventListener("pointerleave", (event) => {
+      if (drawing) end(event);
+    });
     canvas.addEventListener(
       "touchmove",
       (event) => {
         if (drawing) event.preventDefault();
+      },
+      { passive: false }
+    );
+    canvas.addEventListener(
+      "touchstart",
+      (event) => {
+        if (!dateOpened) event.preventDefault();
       },
       { passive: false }
     );
@@ -370,11 +523,115 @@
     scratchReady = true;
   }
 
+  function typeBismillah() {
+    const node = els.bismillah;
+    if (!node) return Promise.resolve();
+    const full =
+      node.getAttribute("data-full-text") ||
+      node.textContent.trim() ||
+      "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
+    if (prefersReduced || heroTyped) {
+      node.textContent = full;
+      node.classList.remove("is-typing");
+      heroTyped = true;
+      return Promise.resolve();
+    }
+    heroTyped = true;
+    node.textContent = "";
+    node.classList.add("is-typing");
+    const chars = Array.from(full);
+    let i = 0;
+    return new Promise((resolve) => {
+      const tick = () => {
+        if (i >= chars.length) {
+          node.classList.remove("is-typing");
+          resolve();
+          return;
+        }
+        node.textContent += chars[i];
+        i += 1;
+        window.setTimeout(tick, 78);
+      };
+      window.setTimeout(tick, 280);
+    });
+  }
+
+  function stopAutoScroll() {
+    autoScrollOn = false;
+    if (autoScrollRaf) {
+      cancelAnimationFrame(autoScrollRaf);
+      autoScrollRaf = 0;
+    }
+  }
+
+  function startAutoScroll() {
+    if (prefersReduced || autoScrollOn) return;
+    autoScrollOn = true;
+    const root = document.documentElement;
+    const prevBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    let last = performance.now();
+    let lockedY = window.scrollY;
+    const pxPerSec = 32;
+
+    const halt = () => {
+      if (!autoScrollOn) return;
+      stopAutoScroll();
+      root.style.scrollBehavior = prevBehavior;
+      window.removeEventListener("wheel", halt);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("keydown", onKeyHalt);
+      window.removeEventListener("scroll", onScrollHalt);
+    };
+    const onKeyHalt = (event) => {
+      const keys = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "];
+      if (keys.includes(event.key)) halt();
+    };
+    let touchY = null;
+    const onTouchMove = (event) => {
+      const y = event.touches && event.touches[0] ? event.touches[0].clientY : null;
+      if (y == null) return;
+      if (touchY != null && Math.abs(y - touchY) > 6) halt();
+      touchY = y;
+    };
+    const onScrollHalt = () => {
+      if (!autoScrollOn) return;
+      if (Math.abs(window.scrollY - lockedY) > 10) halt();
+    };
+
+    const step = (now) => {
+      if (!autoScrollOn) return;
+      const dt = Math.min(48, now - last) / 1000;
+      last = now;
+      const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      if (maxY < 8) {
+        autoScrollRaf = requestAnimationFrame(step);
+        return;
+      }
+      const next = Math.min(maxY, window.scrollY + pxPerSec * dt);
+      lockedY = next;
+      window.scrollTo({ top: next, left: 0, behavior: "auto" });
+      if (next >= maxY - 1) {
+        halt();
+        return;
+      }
+      autoScrollRaf = requestAnimationFrame(step);
+    };
+
+    window.addEventListener("wheel", halt, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("keydown", onKeyHalt);
+    window.addEventListener("scroll", onScrollHalt, { passive: true });
+
+    autoScrollRaf = requestAnimationFrame(step);
+  }
+
   function openInvitation() {
     if (opening || els.cover.hidden) return;
     opening = true;
     els.openBtn.classList.add("is-pressed");
     els.invitation.hidden = false;
+    if (els.bismillah && !prefersReduced) els.bismillah.textContent = "";
     requestAnimationFrame(() => {
       document.getElementById("opening").classList.add("is-visible");
       revealSections(els.invitation);
@@ -382,6 +639,16 @@
       startAmbientPetals();
       if (!prefersReduced) spawnPetals(els.petalField, 14);
       setMusicPlaying(true);
+      typeBismillah().then(() => {
+        const kickoff = () => {
+          if (document.body.classList.contains("is-sealed")) {
+            window.setTimeout(kickoff, 120);
+            return;
+          }
+          window.setTimeout(startAutoScroll, prefersReduced ? 0 : 500);
+        };
+        kickoff();
+      });
     });
 
     const reveal = () => {
